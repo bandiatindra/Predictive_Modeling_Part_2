@@ -1,0 +1,646 @@
+---
+title: "STA 380, Part 2: Exercises 1"
+author: "Atindra Bandi"
+date: "August 10, 2018"
+output: html_document
+---
+
+```{r,echo = FALSE}
+# Setting the seed upfront
+set.seed (1234567)
+library(ggthemes)
+library(corrplot)
+```
+
+# **Probability Practice**
+
+### Part A.
+
+**Given:**
+
+* P(RC) = 0.3
+* P(Yes|RC) and P(No|RC) = 0.5
+* P(Yes) = 0.65 and P(No) = 0.35
+
+From the first bullet we can say that P(TC) = 1-P(RC) = 0.7. Let us assume that the probability of Yes given its TC i.e. P(Yes|TC) is x. 
+
+=> $P(Yes|TC) + P (Yes|RC) = P(Yes)$
+
+=> $x*0.7 + 0.5*0.3 = 0.65$
+
+=> $x = 0.71428$
+
+Thus 71.428% of the people who are truthful clickers answered Yes.
+
+
+### Part B.
+
+**Given:**
+
+* P(positive-test|disease) = 0.993
+* P(negative-test|Nodisease) = 0.9999
+* P(disease) = 0.000025
+
+We need to find P(disease|+ve_test). From Bayes theorem - 
+
+$P(disease|positive-test) = (P(positive-test|disease)*P(disease))/P(positive-test)$
+
+**Now,** $P(positive-test) = P(disease)*P(positive-test|disease) + P(Nodisease)*P(positive-test|Nodisease)$
+
+```{r,echo = FALSE}
+test_positive = 0.000025*0.993 + (1-0.000025)*(1-0.9999)
+
+disease_given_tests_positive = .993*0.000025/test_positive
+print (disease_given_tests_positive)
+```
+
+Thus, there is 19.88% probability that when someone tests positive they would actually have the disease. The problem with this testing outcome is that the probaility of having a disease even when the test gives positive results is just 19.8%, while the test gives +ve results with a probability of 99.3%. This is because a lot of patients who are not likely to have the disease would also be identified as positives by the test (false psitives) due to highly skewed incidence of the disease.
+
+## **Exploratory Analysis: Green Buildings**
+
+```{r,echo = FALSE}
+# set the working directory
+setwd("C:/Users/bandi/Desktop/Predictive Modeling")
+
+# Loading important libraries
+library(ggplot2)
+library(ggmap)
+library(RColorBrewer)
+library(gridExtra)
+library(reshape2)
+
+# Loading the green buildings data set
+greenbuildings = read.csv('./Part 2/STA380/data/greenbuildings.csv')
+greenbuildings$green_rating = as.factor(greenbuildings$green_rating)
+levels(greenbuildings$green_rating) = c("Non-green buildings","Green buildings")
+
+
+# Plotting occupancy against age of the house
+plot_occupancy = ggplot(greenbuildings, aes(x = greenbuildings$leasing_rate,
+                                            y = greenbuildings$Rent,
+                                            color = leasing_rate<10))+ 
+  geom_point(shape=16,size=3,alpha=0.1) + 
+  labs(title="Distribution of rent by occupancy rate", x="\n Occupancy rate", 
+       y='\n Rent ($/sq ft)')+ 
+  theme_minimal()+
+  scale_y_continuous(expand = c(0,0))+
+  scale_color_manual("Occupancy rate",labels = c("Greater than 10%","Less than 10%"),
+                     values = c("#f0650e", "#0091ff")) +
+  theme(legend.text=element_text(size=11),
+        axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_text(colour="grey20",size=12,hjust=0.5),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))
+plot(plot_occupancy)
+```
+
+**As we can see from the graph above there are a few houses which have <10% occupancy rate. It does make sense to remove them to keep our analysis robust enough.**
+
+```{r,echo = FALSE}
+# Taking only the houses with >=10% occupancy
+buildings_higher_occupancy = greenbuildings[greenbuildings$leasing_rate >= 10,]
+attach(buildings_higher_occupancy)
+dim(buildings_higher_occupancy)
+```
+
+**We have 7679 houses in our data set after removing the houses which have <10% occpancy.** 
+
+Let us look if there is any missing data in our data set - 
+
+```{r,echo = FALSE}
+apply(is.na(buildings_higher_occupancy),2,sum)
+```
+
+**Overall the data seems to be clean with 73 missing data points in the employment growth rate.**
+
+Now let us try to double check the differnece between the median rent of houses per sq ft of area for the green houses vs. the non-green houses as stated by the statistician.
+
+```{r,echo = FALSE}
+# Plotting median rents for green and non-green buildings 
+median_rent = setNames(aggregate(Rent,list(green_rating),median),
+                       c("rating","median_rent"))
+ggplot(median_rent, aes(x=as.factor(rating),y=median_rent))+
+  geom_bar(stat = "identity",width = 0.2, fill =c("#A45A52","#708238")) +
+  scale_y_continuous(expand = c(0,0),limits = c(0,30)) +
+  labs(title="Median rent for non-green buildings vs green buildings")+
+  theme_classic()+
+  theme(axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_text(colour="grey20",size=12,hjust=0.5),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))+
+  ylab("\n Median Rent ($/sq ft)") +
+  xlab("\n Green vs. Non-Green Buildings")+
+  geom_text(aes(label=round(median_rent,1)),vjust=-0.3, size=4 ,fontface='bold')
+```
+
+**As we can see from the graph above, it is true that the median rent (per sq ft) of the green buildings is about $2.6 more than that of non-green buildings However there are other factors than just the overall median rent which we should consider to evaluate the cost-benefit analysis of investing in a green house. Below is a summary of some of them which will help us decide better whether we should build a green building or not.**
+
+
+1. Let's first evaluate whether the median calculated above is actually correct! The median rent was calculated from all the homes which have >=10% occupancy. However, here are some homes for which the rent does not include the utility costs while most other homes have their utility costs included in quoted rent price. Below is a small table for the same.
+
+```{r,echo = FALSE}
+# Showing a table of green/non-green building vs rental type
+with(buildings_higher_occupancy, table(as.factor(net), green_rating))
+```
+
+
+**From the above table we can say that (234+39) = 273 buildings do not include utilities in the quoted rent. It seems here that the statisticians was including these 2 type of rents in his analysis which. Thus we need to separate out these rents**
+
+```{r,echo = FALSE}
+# Separating buildings based on whether their rent prices included utility costs or not
+buld_with_utilities = subset (buildings_higher_occupancy,net==0)
+buld_without_utilities = subset (buildings_higher_occupancy,net==1)
+
+# Plot the median rent prices for green and non-green buildings for the 2 categoreis of rent type
+rent_with_utilities = setNames(aggregate(buld_with_utilities$Rent,
+                                         list(buld_with_utilities$green_rating),median),
+                       c("rating","median_rent"))
+
+p1_with_utilities = ggplot(rent_with_utilities, aes(x=as.factor(rating),y=median_rent))+
+  geom_bar(stat = "identity",width = 0.2, fill =c("#A45A52","#708238")) +
+  scale_y_continuous(expand = c(0,0),limits = c(0,30)) +
+  labs(title="Median rent with utilities",fontface='bold')+
+  theme_classic()+
+  theme(axis.text.x = element_text(colour="grey20",size=11,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=11,angle=0),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(colour="grey20",size=11,hjust=0.5))+
+  ylab("\n Median Rent ($/sq ft)") +
+  geom_text(aes(label=round(median_rent,1)),vjust=-0.3, size=4,fontface='bold')
+
+rent_without_utilities = setNames(aggregate(buld_without_utilities$Rent,
+                                         list(buld_without_utilities$green_rating),median),
+                       c("rating","median_rent"))
+
+p2_without_utilities = ggplot(rent_without_utilities, aes(x=as.factor(rating),y=median_rent))+
+  geom_bar(stat = "identity",width = 0.2, fill =c("#A45A52","#708238")) +
+  scale_y_continuous(expand = c(0,0),limits = c(0,30)) +
+  labs(title="Median rent without utilities",fontface='bold')+
+  theme_classic()+
+  theme(axis.text.x = element_text(colour="grey20",size=11,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=11,angle=0),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank())+
+  geom_text(aes(label=round(median_rent,1)),vjust=-0.3, size=4,fontface = 'bold')
+
+# Plot the 2 graphs sided by side
+grid.arrange(p1_with_utilities,p2_without_utilities,ncol=2)
+```
+
+**The left graph shows the median rent for non-green and green buildings when the rent included the utilities, while the right graph shows the same when the rent does not include utilities. Clearly, after separating these rents, green buildings seem to have the median rent of $28.2, which is approximately $3 more than the median rent of non-green buildings.  This is more than what the statistician predicted.**
+
+**However, there still exists a big problem. We can't simply take the median of all the buildings in the US and compare it between green and non-green buildings. We need to look at geographical locations which will significantly impact the building prices. Thus it will be good to look at each of the clusters to understand the difference in prices between green and non-green buuildings.**
+
+However before we process ahead, let us see how the distribution of rent looks like for green buildings .
+
+```{r,echo = FALSE}
+green_buildings_cluster = subset (buld_with_utilities,green_rating=='Green buildings')
+
+ggplot(data = green_buildings_cluster, aes(x = "", y = Rent)) + 
+  geom_boxplot(width=0.3) +
+  coord_cartesian(ylim = c(0, 100)) +
+  geom_jitter(position = position_jitter(height = .1, width = .05)
+              ,aes(colour = "#708238"))+
+  theme_classic()+ xlab("Green buildings")+
+  theme(legend.position="none",
+        axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_text(colour="grey20",size=12,hjust=0.5),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))
+```
+
+**We can see that there are certainly some outliers and thus we should be careful in only taking median values.** 
+
+2. Below we will look at the relationship of the green buildings rent with the average cluster rent.
+
+```{r,echo = FALSE}
+
+green_buildings_cluster = subset (buld_with_utilities,green_rating=='Green buildings')
+
+plot_green_building= ggplot(green_buildings_cluster, aes(x = Rent,
+                                            y = cluster_rent,
+                                            color = '#708238'))+ 
+  geom_point(shape=16,size=3,alpha=0.8) + 
+  labs(title="Avg. cluster rent vs. green building rent", 
+       y='\n Average cluster rent ($/sq ft)',
+       x ='\n Green building rent ($/sq ft)' )+ 
+  theme_classic()+
+  scale_y_continuous(expand = c(0,0), limits = c(0,80)) +
+  scale_x_continuous(expand = c(0,0),limits = c(0,155)) +
+  theme(legend.position="none",
+        axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_text(colour="grey20",size=12,hjust=0.5),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))
+plot(plot_green_building)
+```
+
+**Clearly based on the above graph there is a positive correlation between the green bjuilding prices and average cluster rent.**
+
+3. Let us now compare how much more or less are the green house prices  
+
+```{r,echo = FALSE}
+
+green_buildings_cluster$rent_difference = green_buildings_cluster$Rent - green_buildings_cluster$cluster_rent
+
+ggplot(green_buildings_cluster, aes(x = Rent,
+                                            y = rent_difference,
+                                            color = rent_difference<0))+ 
+  geom_point(shape=16,size=3,alpha=0.8) + 
+  labs(title="Avg. rent difference vs. green building rent", 
+       y='\n Rent differnece ($/sq ft)',
+       x ='\n Green building rent ($/sq ft)' )+ 
+  theme_classic()+
+  xlim(-10,150) + ylim(-20,80)+
+  scale_color_manual("Rent difference",labels = c("<0",">=0"),
+                     values = c("#708238", "#f0650e"))+
+  theme(legend.position="none",
+        axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_text(colour="grey20",size=12,hjust=0.5),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))
+```
+
+**The above graph shows the difference in the rent of green building and the average cluster rent against the green buildings rent. Ee can observe that a majority of the green buildings have a higher rent than the average cluster rent.**
+
+4. We will now quantify the proportion of green buildings which have a higher rent than the average cluster rent and then try to identify its average magnitude over all the clusters.
+
+```{r,echo = FALSE}
+
+green_buildings_cluster$higher_lower_rent = ifelse(green_buildings_cluster$rent_difference>=0,1,0)
+
+ggplot(green_buildings_cluster, aes(x = factor(higher_lower_rent))) +  
+        geom_bar(aes(y = (..count..)/sum(..count..)),width = 0.3,
+                 fill=c("#A45A52","#708238"))+
+  scale_y_continuous(labels = scales::percent,expand = c(0,0),limits = c(0,1))+
+  labs(title="% Green buildings with higher and lower rents than average cluster rent", 
+       y='\n % Green buildings')+
+theme_classic()+
+  scale_x_discrete(labels=c("1" = "Green buildings with higher rent", "0" = "Green buildings with lower rent"))+
+  theme(legend.position="none",
+        axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))+
+  geom_text(aes(label=paste(round(100*(..count..)/sum(..count..),1),"%"),
+                y=(..count..)/sum(..count..)),stat = 'count',
+            vjust=-0.3, size=4,fontface = 'bold')
+```
+
+**From the above graph we can observe that three-fourths (76.1%) of the green buildings have a higher rent than the average rent of the cluster.**
+
+5. Finally, let's look at how different is the overall average of all the green buildings across all the clusters and the average of the clusters
+
+```{r,echo = FALSE}
+rent_melt = melt(green_buildings_cluster[,c('CS_PropertyID','Rent','cluster_rent')],id.vars ='CS_PropertyID')
+
+mean_rent = setNames(aggregate(rent_melt$value,list(rent_melt$variable),mean),
+                       c("buildings","mean_rent"))
+
+ggplot(mean_rent, aes(x=as.factor(buildings),y=mean_rent))+
+  geom_bar(stat = "identity",width = 0.2, fill =c("#708238","#4390bc")) +
+  scale_y_continuous(expand = c(0,0),limits = c(0,40)) +
+  labs(title="Mean rent for green buildings vs mean cluster rent",
+       y='\n Mean rent')+
+  scale_x_discrete(labels=c("Rent" = "Green buildings", "cluster_rent" = "Clusters"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=12,angle=0),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(colour="grey20",size=12,hjust=0.5))+
+    geom_text(aes(label=round(mean_rent,1)),vjust=-0.3, size=4 ,fontface='bold')
+```
+
+
+**The above graph shows the mean rent of all the green buildings and the mean of all the clusters. Overall we can now say that this mean could represent** 
+
+
+**6. The problem of comparing the wrong means is still present because we are comparing the buildings with different age, material and amenities with each other. We will try to see the differences between the rent by differrnt age buckets and among with buildings with/without utilities and with/without a top class building material.**
+
+
+```{r,echo = FALSE}
+# Now looking at the rents buildings based on whether their rent prices included utility costs or not
+buld_with_utilities = subset (buildings_higher_occupancy,net==0)
+# First adding age groups to data frame
+buld_with_utilities$age_buckets = ifelse(buld_with_utilities$age<=15," 0-15", ifelse(buld_with_utilities$age<=30,"15-30","30+"))
+
+# Plot the median rent prices for green and non-green buildings for the 2 categoreis of rent type
+rent_with_age_groups = setNames(aggregate(buld_with_utilities$Rent,
+                                         list(buld_with_utilities$age_buckets,
+                                              buld_with_utilities$green_rating,
+                                              buld_with_utilities$amenities)
+                                              ,median),
+                       c("age_buckets","rating","amenities", "median_rent"))
+
+rent_with_age_groups$amenities = as.factor(rent_with_age_groups$amenities)
+levels(rent_with_age_groups$amenities) = c("Without utililies", "With utilities")
+
+ggplot(rent_with_age_groups, aes(x=as.factor(age_buckets),y=median_rent,fill = rating))+
+  geom_bar(stat = "identity",width = 0.5,position = "dodge") +
+  scale_y_continuous(expand = c(0,0),limits = c(0,35)) +
+  labs(title="Median rent with utilities",fontface='bold')+
+  theme_classic()+
+  theme(axis.text.x = element_text(colour="grey20",size=11,angle=0,hjust=0.5,vjust=0.2),
+        axis.text.y = element_text(colour="grey20",size=11,angle=0),
+        axis.title.x = element_text(colour="grey20",size=11,hjust=0.5),
+        axis.title.y = element_text(colour="grey20",size=11,hjust=0.5))+
+  ylab("\n Median Rent ($/sq ft)") +
+  xlab("\n Age in years") +facet_wrap(~amenities)
+
+```
+
+**From the above graphs we can see that non-green buildings are actually expensive for the first 15 years! While the green buildings seem to be more expensive from 15+ years. However, if compare the first 30 years there does not seem to be any major difference between the buildings of similar ages! And thus it would be very difficult to get back the initial investment. Overall, I would recommend to not go ahead with developing the green  building.** 
+
+## **Bootstrapping**
+
+```{r,echo = FALSE}
+# Loading the important packages
+library(quantmod)
+library(foreach)
+
+library(xts)
+
+# Import a few stocks
+mystocks = c("SPY", "TLT", "LQD", "EEM", "VNQ")
+getSymbols(mystocks)
+
+
+```
+
+**Let us explore the data starting with SPY (US domestic equities)**
+
+
+1. Plotting closing price of  exchange traded funds over time to get both the good and bad runs of the market
+
+```{r,echo = FALSE}
+
+# Legend pending!
+plot(SPY$SPY.Close,col='red',
+     main="Closing price since Jan 2007", 
+     xlab="Time", 
+     ylab="closing price",
+     ylim = c(0,300))
+lines(TLT$TLT.Close,col='green')
+lines(LQD$LQD.Close,col='blue')
+lines(EEM$EEM.Close,col='black')
+lines(VNQ$VNQ.Close,col='orange')
+```
+
+**From the above graph we can see that in 2007 most of the financial markets were performing well and were at a life time high in mid 2007. It was ins 2008 the financial crisis started with a significant slump in 2009. However after that the SPY index has mostly climed up.**
+
+2. Understanding the risk/return values for the 5 traded funds
+
+```{r,echo = FALSE}
+
+# Adjust for splits and dividends in the data
+SPYa = adjustOHLC(SPY)
+TLTa = adjustOHLC(TLT)
+LQDa = adjustOHLC(LQD)
+EEMa = adjustOHLC(EEM)
+VNQa = adjustOHLC(VNQ)
+
+all_returns = cbind(ClCl(SPYa),ClCl(TLTa),ClCl(LQDa),ClCl(EEMa),ClCl(VNQa))
+summary(all_returns)
+# Removing the NAs from the first row
+all_returns = as.matrix(na.omit(all_returns))
+
+# These returns can be viewed as draws from the joint distribution
+pairs(all_returns)
+mystocks = c("SPYa","TLTa","LQDa","EEMa","VNQa")
+foreach( i = 1:5) %do%{plot(all_returns[,i], type='l',main = mystocks [i])}
+summary(all_returns)
+```
+
+**Based on the above summary and graphs plotted we can identify the volatile and safer funds. If we look at the difference in max and min returns, we will see that EEMa and VNQa have the highest return, while SPYa, TLTa and LQDa seem to be safer from the same analysis.**
+
+```{r,echo = FALSE}
+# First doing an even split and looping over 20 days (4 trading weeks) 
+library(mosaic)
+set.seed(99)
+simul1 = foreach ( i = 1:2500, .combine = 'rbind')%do%{
+  
+  initial_wealth = 100000
+  my_weights = c(0.2,0.2,0.2, 0.2, 0.2)
+  total_wealth = initial_wealth
+  holdings = total_wealth*my_weights
+  n_days = 20
+  wealthtracker = rep(0, n_days)
+  
+  for (j in 1:n_days){
+    return.today = resample(all_returns, 1, orig.ids=FALSE)
+    holdings = holdings*(1+return.today)
+    total_wealth = sum(holdings)
+    wealthtracker[j] = total_wealth
+    holdings = total_wealth*my_weights
+  }
+  wealthtracker
+}
+hist(simul1[,n_days]- initial_wealth, breaks=30)
+
+# Calculate 5% value at risk
+initial_wealth - quantile(simul1[,n_days], 0.05)
+
+```
+
+**Thus the value at risk @5% for the first portfolio is `r initial_wealth - quantile(simul1[,n_days], 0.05)`**
+
+Safer investment than the even split
+
+```{r,echo = FALSE}
+# Secondly doing the split and looping over 20 days (4 trading weeks) for safe portfolio
+library(mosaic)
+set.seed(99)
+all_returns = cbind(ClCl(SPYa),ClCl(TLTa),ClCl(LQDa))
+all_returns = as.matrix(na.omit(all_returns))
+                    
+simul2 = foreach ( i = 1:2500, .combine = 'rbind')%do%{
+  
+  initial_wealth = 100000
+  my_weights = c(0.2,0.5,0.3)
+  total_wealth = initial_wealth
+  holdings = total_wealth*my_weights
+  n_days = 20
+  wealthtracker = rep(0, n_days)
+  
+  for (j in 1:n_days){
+    return.today = resample(all_returns, 1, orig.ids=FALSE)
+    holdings = holdings*(1+return.today)
+    total_wealth = sum(holdings)
+    wealthtracker[j] = total_wealth
+    holdings = total_wealth*my_weights
+  }
+  wealthtracker
+}
+hist(simul2[,n_days]- initial_wealth, breaks=30)
+
+# Calculate 5% value at risk
+initial_wealth - quantile(simul2[,n_days], 0.05)
+```
+
+**The value at risk @5% for the safer portfolio is `r initial_wealth - quantile(simul2[,n_days], 0.05)`** 
+
+Aggressive investment than the even split
+
+```{r,echo = FALSE}
+# Secondly doing the split and looping over 20 days (4 trading weeks) for safe portfolio
+library(mosaic)
+set.seed(99)
+all_returns = cbind(ClCl(EEMa),ClCl(VNQa))
+all_returns = as.matrix(na.omit(all_returns))
+                    
+simul3 = foreach ( i = 1:5000, .combine = 'rbind')%do%{
+  
+  initial_wealth = 100000
+  my_weights = c(0.5,0.5)
+  total_wealth = initial_wealth
+  holdings = total_wealth*my_weights
+  n_days = 20
+  wealthtracker = rep(0, n_days)
+  
+  for (j in 1:n_days){
+    return.today = resample(all_returns, 1, orig.ids=FALSE)
+    holdings = holdings*(1+return.today)
+    total_wealth = sum(holdings)
+    wealthtracker[j] = total_wealth
+    holdings = total_wealth*my_weights
+  }
+  wealthtracker
+}
+hist(simul3[,n_days]- initial_wealth, breaks=30)
+
+# Calculate 5% value at risk
+initial_wealth - quantile(simul3[,n_days], 0.05)
+```
+
+**The value at risk @5% for the aggressive portfolio is `r initial_wealth - quantile(simul3[,n_days], 0.05)`** 
+
+Compare the 3 portfolios
+
+```{r,echo = FALSE}
+
+even_portfolio_mean = mean(simul1[,n_days])
+safer_portfolio_mean = mean(simul2[,n_days])
+aggressive_portfolio_mean = mean(simul3[,n_days])
+
+VAR_even_portfolio = initial_wealth - quantile(simul1[,n_days], 0.05)
+VAR_safer_portfolio = initial_wealth - quantile(simul2[,n_days], 0.05)
+VAR_aggressive_portfolio = initial_wealth - quantile(simul3[,n_days], 0.05)
+
+comparison_matrix = setNames(data.frame(matrix(c("even_portfolio","safer_portfolio",
+                                                 "aggressive_portfolio",even_portfolio_mean,
+                                                 safer_portfolio_mean,
+                                                 aggressive_portfolio_mean,
+                                                 VAR_even_portfolio,
+                                                 VAR_safer_portfolio,
+                                                 VAR_aggressive_portfolio),
+                                                 nrow=3,ncol=3)),
+                             c("Portfolio Type","Average Profit","VAR"))
+comparison_matrix
+```
+  
+**Overall after analyzing the VAR for the 3 portfolios we can say that the aggressive portfolio does have a higher VAR, however it also has a higher return. So, the investor needs to take a decision based on his/her risk apetite. If they are willing to take a higher risk they can invest in EMEa**
+
+
+## **Market Segmentation**
+
+```{r,echo = FALSE}
+
+social_media = read.csv('social_marketing.csv', header=TRUE)
+
+#Removing the users who have posted pornographic content more than twice 
+#Removing the users who have posted spam
+#social_media = social_media[social_media$adult<=2,]
+#social_media = social_media[social_media$spam==0,]
+dim(social_media)
+```
+
+
+**Overall after removing some of the extra data we have 7447 rows**
+
+```{r,echo = FALSE}
+sum_mentions = data.frame(value = apply(social_media[,-1],2,sum))
+sum_mentions$key = rownames(sum_mentions)
+
+sum_mentions =sum_mentions[order(-(sum_mentions$value)),]
+ggplot(sum_mentions[(1:9),],aes(reorder(key,-value),value))+geom_bar(stat = 'identity',fill ='#708238' ) + theme_classic() + labs(title="Counts of top interests",
+       y='\n # of mentions', x = '\n Top interests')
+
+# Plot a graph to see how many peopple mention each
+
+people_mentions = data.frame(value = apply(social_media[,-1],2,FUN=function(x) count(x > 0)))
+people_mentions$key = rownames(people_mentions)
+people_mentions =people_mentions[order(-(people_mentions$value)),]
+
+ggplot(people_mentions[(1:9),],aes(reorder(key,-value),value))+geom_bar(stat = 'identity',fill ='#708238') + theme_classic() + labs(title="# of people mentioning the top interests",
+       y='\n # of people', x = '\n Top interests')
+
+```
+
+**Based on the 2 plots above it seems that there have been a lot of mentions of photo-sharing, health nutrition, sports fandom, travel, current events and college_university. We should however look whether there are any interesting correlations among these variables to beter profile the segments.**
+
+Below we will see the correlation between different variables
+
+```{r,echo = FALSE}
+library(corrplot)
+cor_social_media = cor(social_media[,-1]) 
+corrplot(cor_social_media,method = "circle",type = "upper")
+```
+
+**Based on the correlation matrix we find the following variables correlated among themselves. This means that the customer segments could be defined using these correlated variables - **
+
+* **Travel, politics, news and computers **
+* **Photo-sharing, cooking, beauty, and fashion**
+* **TV_film, art**
+* **Online playing, college_univ, sports playing**
+* **health_nutrition, personal_fitness, business**
+* **sports_fandom, parenting, school, religion**
+
+**We will explore these below through clustering and try to identify key segments for the company.**
+
+
+```{r,echo = FALSE}
+library(LICORS)
+X1 = social_media[,-(1:2)]
+X1 = scale(X1, center=TRUE, scale=TRUE)
+
+# Extract the centers and scales from the rescaled data (which are named attributes)
+mu = attr(X1,"scaled:center")
+sigma = attr(X1,"scaled:scale")
+
+# Run k-means with 6 clusters and 25 starts
+clust1 = kmeanspp(X1, 6, nstart=25)
+
+c1 = clust1$center[1,]*sigma + mu
+c2 = clust1$center[2,]*sigma + mu
+c3 = clust1$center[3,]*sigma + mu
+c4 = clust1$center[4,]*sigma + mu
+c5 = clust1$center[5,]*sigma + mu
+c6 = clust1$center[6,]*sigma + mu
+
+cluster_combined = cbind(c1,c2,c3,c4,c5,c6)
+
+write.csv(cluster_combined,"combined_cluster.csv")
+#cluster_combined
+
+```
+
+image: ![Cluster centers for each interest](C:/Users/bandi/Desktop/Predictive Modeling/Part 2/Cluster Centers.png) 
+
+
+**The table above shows the value of the cluster centers for each cluster and each interest. We can see interesting similarities between the 6 clusters. Below is the description for each of them.**
+
+* Clust 1 (c1) - We can see that the people in this cluster do not tweet about anything except for spam and adult content. It might be possible that these are either bots or spams
+
+* Clust 2 (c2)  - These are the people who mostly tweet about photo-sharing, fashion, art, music and seem to be interested in topics related to beauty 
+
+* Clust 3 (c3) - These people mostly tweet about tv and film, college/university and about playing sports. These could potentially be college going people who are interested in these topics.
+
+* Clust 4 (c4) - These set of people seem to like to tweet about healthy life, personal fitness and outdoor activities
+
+* Clust 5 (C5) - These people are mostly tweeting about travel, politics and are interested in news
+
+* Cluter 6 (c6) - These people are mostly tweeting about religion, parenting, school and family
+
+
+
+
