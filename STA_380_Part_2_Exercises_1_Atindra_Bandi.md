@@ -447,7 +447,7 @@ be defined using these correlated variables-**
 segments for the company.**
 
 image: ![Cluster centers for each
-interest](C:/Users/bandi/Desktop/Predictive%20Modeling/Part%202/Cluster%20Centers.png)
+interest](STA_380_Part_2_Exercises_1_Atindra_Bandi_files/Cluster%20Centers.png)
 
 **The table above shows the value of the cluster centers for each
 cluster and each interest. We can see interesting similarities between
