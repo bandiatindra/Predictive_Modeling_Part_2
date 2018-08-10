@@ -169,21 +169,23 @@ cluster.**
 
 ![](STA_380_Part_2_Exercises_1_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
-**The above graph shows the mean rent of all the green buildings and the
-mean of all the clusters. Overall we can now say that this mean could
-represent**
+**The above graph shows the median rent of all the green buildings and
+the mean of all the clusters. Although this analysis also leads to the
+conclusion that green buildings could be ~$3 more in rent, we are
+missing the most critical thing of comparing medians for all the
+buildings without accounting for other variables.**
 
 **6. The problem of comparing the wrong means is still present because
 we are comparing the buildings with different age, material and
 amenities with each other. We will try to see the differences between
-the rent by differrnt age buckets and among with buildings with/without
-utilities and with/without a top class building material.**
+the rent by differrnt age buckets and among buildings with/without
+utilities.**
 
 ![](STA_380_Part_2_Exercises_1_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-14-1.png)
 
 **From the above graphs we can see that non-green buildings are actually
-expensive for the first 15 years! While the green buildings seem to be
-more expensive from 15+ years. However, if compare the first 30 years
+expensive for the first 15 years, while the green buildings seem to be
+more expensive from 15+ years. However, if we compare the first 30 years
 there does not seem to be any major difference between the buildings of
 similar ages! And thus it would be very difficult to get back the
 initial investment. Overall, I would recommend to not go ahead with
@@ -432,9 +434,9 @@ Below we will see the correlation between different variables
 
 **Based on the correlation matrix we find the following variables
 correlated among themselves. This means that the customer segments could
-be defined using these correlated variables - **
+be defined using these correlated variables-**
 
--   **Travel, politics, news and computers **
+-   **Travel, politics, news and computers**
 -   **Photo-sharing, cooking, beauty, and fashion**
 -   **TV\_film, art**
 -   **Online playing, college\_univ, sports playing**
@@ -469,5 +471,5 @@ the 6 clusters. Below is the description for each of them.**
 -   Clust 5 (C5) - These people are mostly tweeting about travel,
     politics and are interested in news
 
--   Cluter 6 (c6) - These people are mostly tweeting about religion,
-    parenting, school and family
+-   Clust 6 (c6) - These people are mostly tweeting about religion,
+    parenting, school and family. These might be parents.
