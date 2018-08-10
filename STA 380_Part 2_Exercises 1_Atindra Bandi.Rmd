@@ -2,7 +2,9 @@
 title: "STA 380, Part 2: Exercises 1"
 author: "Atindra Bandi"
 date: "August 10, 2018"
-output: html_document
+output: 
+  md_document:
+  variant: markdown_github
 ---
 
 ```{r,echo = FALSE}
@@ -300,8 +302,8 @@ mean_rent = setNames(aggregate(rent_melt$value,list(rent_melt$variable),mean),
 ggplot(mean_rent, aes(x=as.factor(buildings),y=mean_rent))+
   geom_bar(stat = "identity",width = 0.2, fill =c("#708238","#4390bc")) +
   scale_y_continuous(expand = c(0,0),limits = c(0,40)) +
-  labs(title="Mean rent for green buildings vs mean cluster rent",
-       y='\n Mean rent')+
+  labs(title="Median rent for green buildings vs median cluster rent",
+       y='\n Median rent')+
   scale_x_discrete(labels=c("Rent" = "Green buildings", "cluster_rent" = "Clusters"))+
   theme_classic()+
   theme(axis.text.x = element_text(colour="grey20",size=12,angle=0,hjust=0.5,vjust=0.2),
@@ -312,10 +314,10 @@ ggplot(mean_rent, aes(x=as.factor(buildings),y=mean_rent))+
 ```
 
 
-**The above graph shows the mean rent of all the green buildings and the mean of all the clusters. Overall we can now say that this mean could represent** 
+**The above graph shows the median rent of all the green buildings and the mean of all the clusters. Although this analysis also leads to the conclusion that green buildings could be ~$3 more in rent, we are missing the most critical thing of comparing medians for all the buildings without accounting for other variables.** 
 
 
-**6. The problem of comparing the wrong means is still present because we are comparing the buildings with different age, material and amenities with each other. We will try to see the differences between the rent by differrnt age buckets and among with buildings with/without utilities and with/without a top class building material.**
+**6. The problem of comparing the wrong means is still present because we are comparing the buildings with different age, material and amenities with each other. We will try to see the differences between the rent by differrnt age buckets and among buildings with/without utilities.**
 
 
 ```{r,echo = FALSE}
@@ -338,7 +340,7 @@ levels(rent_with_age_groups$amenities) = c("Without utililies", "With utilities"
 ggplot(rent_with_age_groups, aes(x=as.factor(age_buckets),y=median_rent,fill = rating))+
   geom_bar(stat = "identity",width = 0.5,position = "dodge") +
   scale_y_continuous(expand = c(0,0),limits = c(0,35)) +
-  labs(title="Median rent with utilities",fontface='bold')+
+  labs(title="Median rent with/without utilities by age",fontface='bold')+
   theme_classic()+
   theme(axis.text.x = element_text(colour="grey20",size=11,angle=0,hjust=0.5,vjust=0.2),
         axis.text.y = element_text(colour="grey20",size=11,angle=0),
@@ -349,7 +351,7 @@ ggplot(rent_with_age_groups, aes(x=as.factor(age_buckets),y=median_rent,fill = r
 
 ```
 
-**From the above graphs we can see that non-green buildings are actually expensive for the first 15 years! While the green buildings seem to be more expensive from 15+ years. However, if compare the first 30 years there does not seem to be any major difference between the buildings of similar ages! And thus it would be very difficult to get back the initial investment. Overall, I would recommend to not go ahead with developing the green  building.** 
+**From the above graphs we can see that non-green buildings are actually expensive for the first 15 years, while the green buildings seem to be more expensive from 15+ years. However, if we compare the first 30 years there does not seem to be any major difference between the buildings of similar ages! And thus it would be very difficult to get back the initial investment. Overall, I would recommend to not go ahead with developing the green  building.** 
 
 ## **Bootstrapping**
 
@@ -586,9 +588,9 @@ cor_social_media = cor(social_media[,-1])
 corrplot(cor_social_media,method = "circle",type = "upper")
 ```
 
-**Based on the correlation matrix we find the following variables correlated among themselves. This means that the customer segments could be defined using these correlated variables - **
+**Based on the correlation matrix we find the following variables correlated among themselves. This means that the customer segments could be defined using these correlated variables-**
 
-* **Travel, politics, news and computers **
+* **Travel, politics, news and computers**
 * **Photo-sharing, cooking, beauty, and fashion**
 * **TV_film, art**
 * **Online playing, college_univ, sports playing**
@@ -639,7 +641,7 @@ image: ![Cluster centers for each interest](C:/Users/bandi/Desktop/Predictive Mo
 
 * Clust 5 (C5) - These people are mostly tweeting about travel, politics and are interested in news
 
-* Cluter 6 (c6) - These people are mostly tweeting about religion, parenting, school and family
+* Clust 6 (c6) - These people are mostly tweeting about religion, parenting, school and family. These might be parents.
 
 
 
