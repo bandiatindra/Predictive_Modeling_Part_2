@@ -626,7 +626,7 @@ write.csv(cluster_combined,"combined_cluster.csv")
 
 ```
 
-image: ![Cluster centers for each interest](C:/Users/bandi/Desktop/Predictive Modeling/Part 2/Cluster Centers.png) 
+image: ![Cluster centers for each interest](STA_380_Part_2_Exercises_1_Atindra_Bandi_files/Cluster Centers.PNG) 
 
 
 **The table above shows the value of the cluster centers for each cluster and each interest. We can see interesting similarities between the 6 clusters. Below is the description for each of them.**
