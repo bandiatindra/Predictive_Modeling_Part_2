@@ -1,3 +1,6 @@
+Flights Data
+============
+
     ## corrplot 0.84 loaded
 
     ## -- Attaching packages ------------------------------------------------------- tidyverse 1.2.1 --
@@ -209,18 +212,21 @@ grocery items boght by customers.**
     ## Absolute minimum support count: 9 
     ## 
     ## set item appearances ...[0 item(s)] done [0.00s].
-    ## set transactions ...[169 item(s), 9835 transaction(s)] done [0.00s].
+    ## set transactions ...[169 item(s), 9835 transaction(s)] done [0.01s].
     ## sorting and recoding items ... [157 item(s)] done [0.00s].
-    ## creating transaction tree ... done [0.00s].
+    ## creating transaction tree ... done [0.01s].
     ## checking subsets of size 1 2 3 4 5
 
     ## Warning in apriori(groceriestrans, parameter = list(support = 0.001,
     ## confidence = 0.5, : Mining stopped (maxlen reached). Only patterns up to a
     ## length of 5 returned!
 
-    ##  done [0.02s].
+    ##  done [0.03s].
     ## writing ... [5622 rule(s)] done [0.00s].
     ## creating S4 object  ... done [0.00s].
+
+**We ran the Apriori algorithm to obtain interesting associations. Let
+us look at the top 10 associations by their lift value:**
 
     ##      lhs                        rhs                  support confidence     lift count
     ## [1]  {Instant food products,                                                          
@@ -252,7 +258,7 @@ grocery items boght by customers.**
 **Let's also try to visualize these interesting associations in a
 graph**
 
-![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-13-1.png)
 
 **Based on this below are some of the interesting associations -**
 
@@ -588,7 +594,7 @@ look at how does the accuracy varyfor different authors**
       xlab ("Authors") + 
       geom_text(aes(label=paste0(sprintf("%.0f", percentage_accuracy*100),"%")), vjust = 1, size=4,fontface='bold',colour = 'white')
 
-![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-18-1.png)
+![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-19-1.png)
 
     #PLot the authors which are not predicted that well - 
 
@@ -606,7 +612,7 @@ look at how does the accuracy varyfor different authors**
       xlab ("Authors") + 
       geom_text(aes(label=paste0(sprintf("%.0f", percentage_accuracy*100),"%")), vjust = 1, size=4,fontface='bold',colour = 'white')
 
-![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-18-2.png)
+![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-19-2.png)
 
 **The authors most correctly predicted by Random forest are -
 JimGilchrist, LynnleyBrowning, KarlPenhaul, RobinSidel, MatthewBunce,
@@ -672,7 +678,7 @@ algorithm.**
       xlab ("Authors") + 
       geom_text(aes(label=paste0(sprintf("%.0f", percentage_accuracy*100),"%")), vjust = 1, size=4,fontface='bold',colour = 'white')
 
-![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-20-1.png)
+![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-21-1.png)
 
     #PLot the authors which are not predicted that well - 
 
@@ -690,7 +696,7 @@ algorithm.**
       xlab ("Authors") + 
       geom_text(aes(label=paste0(sprintf("%.0f", percentage_accuracy*100),"%")), vjust = 1, size=4,fontface='bold',colour = 'white')
 
-![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-20-2.png)
+![](STA_380_Part_2_Exercises_2_Atindra_Bandi_files/figure-markdown_strict/unnamed-chunk-21-2.png)
 
 **The authors most correctly predicted by SVM are - LynnleyBrowning,
 JimGilchrist, GrahamEarnshaw, BradDorfman, MatthewBunce, NickLouth,

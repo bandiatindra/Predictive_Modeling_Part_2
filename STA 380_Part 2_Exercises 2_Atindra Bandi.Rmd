@@ -6,6 +6,7 @@ output:
   md_document:
   variant: markdown_github
 ---
+#Flights Data
 
 ```{r,echo = FALSE}
 # Setting the seed upfront
@@ -440,7 +441,7 @@ ggplot(worst_destinations, aes(x=reorder(as.factor(Dest),-fraction),y=fraction))
 
 **Below we will try to understand interesting associations between the grocery items boght by customers.**
 
-```{r,echo = FALSE}
+```{r, echo = FALSE}
 library (reshape2)
 library (arules)
 library (grid)
@@ -466,6 +467,12 @@ musicrules = apriori(groceriestrans,
 	parameter=list(support=.001, confidence=.5, maxlen=5))
 
 
+```
+
+
+**We ran the Apriori algorithm to obtain interesting associations. Let us look at the top 10 associations by their lift value:**
+
+``` {r , echo = FALSE}
 ## There are too many rules  We need the most interesting associations so we will only fiter out the top 10 rules by lift 
 inspect(head(musicrules, n = 10, by ="lift"))
 ```
